@@ -4,7 +4,10 @@ import (
 	"net/http"
 	"html/template"
 	"os"
+	"syscall"
 	"path/filepath"
+	"io"
+	"fmt"
 
 	"github.com/SmokierLemur51/glink/models"
 )
@@ -28,13 +31,13 @@ func RenderTemplate(w http.ResponseWriter, data models.PageData) error {
 
 
 // -------------------- files & folders  --------------------
-func CopyDirectory(srcDir, dest string) error {
-	entries, err := os.ReadDir(scrDir)
+func CopyDirectory(srcDir string, dest string) error {
+	entries, err := os.ReadDir(srcDir)
 	if err != nil {
 		return err
 	}
 	for _, entry := range entries {
-		sourcePath := filepath.Join(scrDir, entry.Name())
+		sourcePath := filepath.Join(srcDir, entry.Name())
 		destPath := filepath.Join(dest, entry.Name())
 
 		fileInfo, err := os.Stat(sourcePath)
@@ -57,7 +60,7 @@ func CopyDirectory(srcDir, dest string) error {
 			}
 		case os.ModeSymlink:
 			if err := CopySymLink(sourcePath, destPath); err != nil {
-				return
+				return err
 			}
 		default:
 			if err := Copy(sourcePath, destPath); err != nil {
@@ -84,6 +87,7 @@ func CopyDirectory(srcDir, dest string) error {
 	return nil
 }
 
+
 func Copy(srcFile, dstFile string) error {
 	out, err := os.Create(dstFile)
 	if err != nil {
@@ -96,14 +100,21 @@ func Copy(srcFile, dstFile string) error {
 	if err != nil {
 		return err
 	}
+
+	defer in.Close()
+
+	_, err = io.Copy(out, in)
+	if err != nil {
+		return err
+	}
 	return nil
 }
+
 
 func Exists(filePath string) bool {
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		return false
 	}
-
 	return true
 }
 
