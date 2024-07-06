@@ -6,7 +6,7 @@ def new_poetry_project() -> None:
     """
     # getting projects directory
     home = Path.home()
-    project_directory = home / 'projects'
+    project_directory = home / 'glink'
     # name new projects
     project = input("Name of new project: ")
     poetry_package = input("Name of poetry package: ")
